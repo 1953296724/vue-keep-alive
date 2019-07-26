@@ -1,0 +1,106 @@
+<div id="app">
+  <parent-com />
+</div>
+
+
+
+const getData = (second, resStr) => {
+  return new Promise((reslove, reject) => {
+    setTimeout(() => {
+      reslove(resStr);
+    }, second * 1000)
+  })
+}
+
+Vue.component('ComA', {
+  template: `
+    <div>
+        I am com-a , <br>
+        dataStatus is 
+        <span style="color: blueviolet;">{{ dataStatus }}</span>
+    </div>
+  `,
+  data() {
+    return {
+      dataStatus: "waitings"
+    }
+  },
+  created() {
+    if (this.dataStatus === 'success') return
+    this.$emit('loading')
+    getData(3, 'success').then(res => {
+      this.dataStatus = res
+      this.$emit('loading', false)
+    }).catch(err => {
+      alert(err)
+    })
+  }
+})
+
+Vue.component('ComB', {
+  template: `
+    <div>
+        I am com-b, <br>
+        dataStatus is 
+        <span style="color: blueviolet;">{{ dataStatus }}</span>
+    </div>
+  `,
+  data() {
+    return {
+      dataStatus: "waitings"
+    }
+  },
+  created() {
+    if (this.dataStatus === 'success') return
+    this.$emit('loading')
+    getData(1, 'success').then(res => {
+      this.dataStatus = res
+      this.$emit('loading', false)
+    }).catch(err => {
+      alert(err)
+    })
+  }
+})
+
+Vue.component('ParentCom', {
+  template: `
+    <div style="position: relative">
+      <span v-show="isLoading" style="position: absolute;top: 0; left: 0; bottom: 0; right: 0;background: #333; color: #fff; display:flex; justify-content: center;align-items: center;font-size: 30px;">loading     {{ loadingTime }}</span><br>
+      <button @click="curCom = 'A'">A</button><br>
+      <button @click="curCom = 'B'">B</button>     curCom: {{ curCom }}
+
+      <div style="border: 1px solid red;padding: 10px;margin: 20px;">
+      <keep-alive> 
+        <component
+          :is="curCom === 'A' ? 'com-a' : 'com-b'" 
+          @loading="handleLoading"/>
+      </keep-alive>
+    </div>
+  `,
+  data () {
+    return {
+      curCom: 'A',
+      isLoading: false,
+      loadingTime: 0
+    }
+  },
+  methods: {
+    handleLoading(status = true) {
+      this.isLoading = status
+      if (status) {
+        const curDate = new Date()
+        this.timer = setInterval(() => {
+           this.loadingTime = Number(new Date()) - Number(curDate)
+        }, 10)
+      } else {
+        this.timer && clearInterval(this.timer)
+      }
+    }
+  }
+})
+
+new Vue({
+  el: '#app'
+})
+
+Vue.config.productionTip = false
